@@ -1,6 +1,7 @@
 # Lua for Visual Studio Code
 
 An extension to support the Lua language within visual studio code.
+
 Currently Features:
 * Intellisense (autocompletion)
 

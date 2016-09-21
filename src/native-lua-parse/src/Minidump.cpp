@@ -1,3 +1,4 @@
+#ifdef _WIN32
 #include "Minidump.h"
 namespace Windows
 {
@@ -25,3 +26,4 @@ void WINAPI SetupMinidump()
   Windows::ULONG stackSize = 1 << 17;
   Windows::SetThreadStackGuarantee(&stackSize);
 }
+#endif

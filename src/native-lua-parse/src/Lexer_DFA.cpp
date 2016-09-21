@@ -1,5 +1,6 @@
 #include "Lexer_DFA.h"
 #include <functional>
+#include <vector>
 
 namespace Lexer
 {

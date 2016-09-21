@@ -23,7 +23,7 @@ public:
     this->position = position;
   }
 
-  const char* what() const override
+  const char* what() const throw() override
   {
     return error.c_str();
   }

@@ -12,7 +12,7 @@ public:
   {
     if (ptr)
     {
-      vector::push_back(std::move(ptr));
+      std::vector<std::unique_ptr<T>>::push_back(std::move(ptr));
       return true;
     }
     return false;
@@ -296,7 +296,7 @@ public:
     :Error(error)
   {}
 
-  const char* what() const override { return Error.c_str(); }
+  const char* what() const throw() override  { return Error.c_str(); }
   std::string Error;
 };
 

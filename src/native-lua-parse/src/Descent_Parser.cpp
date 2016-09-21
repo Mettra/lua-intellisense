@@ -114,7 +114,7 @@ struct RecursiveParser
   bool Accept(Token::Type::Enum type)
   {
     if (tokenStream >= tokens.size())
-      return nullptr;
+      return false;
 
     if (tokens[tokenStream].EnumTokenType == type)
     {
@@ -123,13 +123,13 @@ struct RecursiveParser
       return true;
     }
 
-    return nullptr;
+    return false;
   }
 
   bool Accept(Token::Type::Enum type, Token &t)
   {
     if (tokenStream >= tokens.size())
-      return nullptr;
+      return false;
 
     if (tokens[tokenStream].EnumTokenType == type)
     {
@@ -139,7 +139,7 @@ struct RecursiveParser
       return true;
     }
 
-    return nullptr;
+    return false;
   }
 
   bool Expect(Token::Type::Enum type)
@@ -153,8 +153,10 @@ struct RecursiveParser
       else
         errors.push_back(ParsingException(std::string("Expected ") + TokenNames[(int)type] + ", found " + TokenNames[(int)tokens[tokenStream].EnumTokenType] + ".", tokens[tokenStream].Position));
 
+#ifdef __EXCEPTIONS
       if (throwException)
         throw errors.back();
+#endif
 
       return false;
     }
@@ -171,8 +173,10 @@ struct RecursiveParser
       else
         errors.push_back(ParsingException(std::string("Expected ") + TokenNames[(int)type] + ", found " + TokenNames[(int)tokens[tokenStream].EnumTokenType] + ".", tokens[tokenStream].Position));
 
+#ifdef __EXCEPTIONS
       if (throwException)
         throw errors.back();
+#endif
 
       return false;
     }
@@ -215,10 +219,12 @@ struct RecursiveParser
       if (tokenStream >= tokens.size())
         errors.push_back(ParsingException("End of token stream!"));
       else
-        errors.push_back(ParsingException("Expected "s + CollectTokenNames(args...) + ", found " + TokenNames[(int)tokens[tokenStream].EnumTokenType] + "."));
+        errors.push_back(ParsingException(std::string("Expected ") + CollectTokenNames(args...) + ", found " + TokenNames[(int)tokens[tokenStream].EnumTokenType] + "."));
 
+#ifdef __EXCEPTIONS
       if (throwException)
         throw errors.back();
+#endif
 
       return false;
     }
@@ -263,8 +269,10 @@ struct RecursiveParser
     {
       errors.push_back(ParsingException(error, tokens[tokenStream].Position));
 
+#ifdef __EXCEPTIONS
       if (throwException)
         throw errors.back();
+#endif
 
       return false;
     }
@@ -286,8 +294,10 @@ struct RecursiveParser
     if (tokenStream != tokens.size())
     {
       errors.push_back(ParsingException("Syntax error near '" + tokens[tokenStream].str() + "'", tokens[tokenStream].Position));
+#ifdef __EXCEPTIONS
       if (throwException)
         throw errors.back();
+#endif
     }
 
     //Destroy the "end" node of the main chunk
@@ -524,8 +534,10 @@ struct RecursiveParser
       else
       {
         errors.push_back(ParsingException(std::string("Expected = or in, found ") + TokenNames[(int)tokens[tokenStream - 1].EnumTokenType] + ".", tokens[tokenStream - 1].Position));
-        if (throwException)
-          throw errors.back();
+#ifdef __EXCEPTIONS
+      if (throwException)
+        throw errors.back();
+#endif
 
         return false;
       }
@@ -657,8 +669,10 @@ struct RecursiveParser
     else
     {
       errors.push_back(ParsingException(std::string("Expected =, +=, -=, *=, or /=, found ") + TokenNames[(int)tokens[tokenStream - 1].EnumTokenType] + ".", tokens[tokenStream - 1].Position));
+#ifdef __EXCEPTIONS
       if (throwException)
         throw errors.back();
+#endif
 
       return false;
     }
@@ -2104,9 +2118,9 @@ public:
   virtual VisitResult Visit(BlockNode* node)
   {
 
-    for (auto &node : node->Statements)
+    for (auto &state_node : node->Statements)
     {
-      node->Walk(this);
+      state_node->Walk(this);
       my_log("\n");
     }
 
@@ -2121,16 +2135,16 @@ public:
 
   virtual VisitResult Visit(AssignmentNode* node)
   {
-    for (auto &node : node->LeftVariables)
+    for (auto &var_node : node->LeftVariables)
     {
-      node->Walk(this);
+      var_node->Walk(this);
     }
 
     my_log(" %s ", node->Operator.str().c_str());
 
-    for (auto &node : node->RightExpressions)
+    for (auto &exp_node : node->RightExpressions)
     {
-      node->Walk(this);
+      exp_node->Walk(this);
     }
 
     return VisitResult::Stop;
@@ -2171,9 +2185,9 @@ public:
     if (node->LeftSuffix)
       node->LeftSuffix->Walk(this);
 
-    for (auto &node : node->CallNodes)
+    for (auto &c_node : node->CallNodes)
     {
-      node->Walk(this);
+      c_node->Walk(this);
     }
 
     if (node->Index)
@@ -2270,9 +2284,9 @@ public:
   virtual VisitResult Visit(ReturnNode* node)
   {
     my_log("return ");
-    for (auto &node : node->ReturnValues)
+    for (auto &r_node : node->ReturnValues)
     {
-      node->Walk(this);
+      r_node->Walk(this);
     }
 
     return VisitResult::Stop;
@@ -2326,9 +2340,9 @@ public:
 
     node->Variable->Walk(this);
 
-    for (auto &node : node->Calls)
+    for (auto &c_node : node->Calls)
     {
-      node->Walk(this);
+      c_node->Walk(this);
     }
 
     return VisitResult::Stop;
@@ -2340,9 +2354,9 @@ public:
     node->LeftVar->Walk(this);
     my_log(")");
 
-    for (auto &node : node->RightCalls)
+    for (auto &r_node : node->RightCalls)
     {
-      node->Walk(this);
+      r_node->Walk(this);
     }
 
     return VisitResult::Stop;
@@ -2470,9 +2484,9 @@ public:
   virtual VisitResult Visit(GenericForNode* node)
   {
 
-    for (auto &node : node->ExpressionList)
+    for (auto &e_node : node->ExpressionList)
     {
-      node->Walk(this);
+      e_node->Walk(this);
     }
 
     node->Block->Walk(this);
@@ -2491,9 +2505,9 @@ public:
 
     my_log(" = ");
 
-    for (auto &node : node->ExpressionList)
+    for (auto &e_node : node->ExpressionList)
     {
-      node->Walk(this);
+      e_node->Walk(this);
     }
 
     return VisitResult::Stop;

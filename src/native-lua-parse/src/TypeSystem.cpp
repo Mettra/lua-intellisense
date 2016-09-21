@@ -3,6 +3,7 @@
 #include <sstream>
 #include <stack>
 #include <functional>
+#include <cmath>
 
 static LibraryReference coreLibRef;
 
@@ -198,14 +199,18 @@ void ErrorSameName(const std::string& name)
 {
   std::stringstream stream;
   stream << "Duplicate symbols with the same name '" << name << "' in the same scope";
+  #ifdef __EXCEPTIONS
   throw SemanticException(stream.str());
+  #endif
 }
 
 void ErrorSymbolNotFound(const std::string& name)
 {
   std::stringstream stream;
   stream << "The symbol '" << name << "' was not found";
+  #ifdef __EXCEPTIONS
   throw SemanticException(stream.str());
+  #endif
 }
 
 void AddReference(Library *library, Symbol *sym)
@@ -603,13 +608,13 @@ public:
     std::vector<ValueData> expressionData;
     int num_varargs = 0;
 
-    for (auto &node : node->RightExpressions)
+    for (auto &expr : node->RightExpressions)
     {
-      if (node->SEM_ResolvedType && node->SEM_ResolvedType->GetResolvedType() == GetBaseType("VariableArgument"))
+      if (expr->SEM_ResolvedType && expr->SEM_ResolvedType->GetResolvedType() == GetBaseType("VariableArgument"))
         num_varargs += 1;
 
-      expressionTypes.push_back(node->SEM_ResolvedType);
-      expressionData.push_back(node->SEM_Value);
+      expressionTypes.push_back(expr->SEM_ResolvedType);
+      expressionData.push_back(expr->SEM_Value);
     }
 
     //If there are varargs, figure out how many spaces they occupy and fix the vectors
@@ -1144,9 +1149,9 @@ public:
 
   virtual VisitResult Visit(ExpressionArgumentNode* node)
   {
-    for (auto &node : node->ExpressionList)
+    for (auto &e_node : node->ExpressionList)
     {
-      node->Walk(this);
+      e_node->Walk(this);
     }
 
     return VisitResult::Stop;
@@ -1200,10 +1205,10 @@ public:
   {
     std::vector<Type *> returnTypes;
 
-    for (auto &node : node->ReturnValues)
+    for (auto &r_node : node->ReturnValues)
     {
-      node->Walk(this);
-      returnTypes.push_back(node->SEM_ResolvedType);
+      r_node->Walk(this);
+      returnTypes.push_back(r_node->SEM_ResolvedType);
     }
 
     Type *returnType = lib->CreateMultipleType(returnTypes);
@@ -1283,14 +1288,14 @@ public:
 
   virtual VisitResult Visit(TableNode* node)
   {
-    for (auto &node : node->Indicies)
+    for (auto &i_node : node->Indicies)
     {
-      node->Walk(this);
+      i_node->Walk(this);
     }
 
-    for (auto &node : node->Values)
+    for (auto &v_node : node->Values)
     {
-      node->Walk(this);
+      v_node->Walk(this);
     }
 
     Type *tableType = lib->CreateBlankType("Table");
@@ -1441,12 +1446,12 @@ public:
           
           if (node->Operator.EnumTokenType == Token::Type::Modulo)
           {
-            node->SEM_Value.Data.Number = std::fmodf(node->Left->SEM_Value.Data.Number, node->Right->SEM_Value.Data.Number);
+            node->SEM_Value.Data.Number = std::fmod(node->Left->SEM_Value.Data.Number, node->Right->SEM_Value.Data.Number);
           }
           
           if(node->Operator.EnumTokenType == Token::Type::Exponent)
           {
-            node->SEM_Value.Data.Number = std::powf(node->Left->SEM_Value.Data.Number, node->Right->SEM_Value.Data.Number);
+            node->SEM_Value.Data.Number = std::pow(node->Left->SEM_Value.Data.Number, node->Right->SEM_Value.Data.Number);
           }
         }
 
@@ -1799,9 +1804,9 @@ public:
   {
 
 
-    for (auto &node : node->ExpressionList)
+    for (auto &e_node : node->ExpressionList)
     {
-      node->Walk(this);
+      e_node->Walk(this);
     }
 
     node->Block->Walk(this);
@@ -1815,14 +1820,14 @@ public:
     std::vector<ValueData> expressionData;
     int num_varargs = 0;
 
-    for (auto &node : node->ExpressionList)
+    for (auto &e_node : node->ExpressionList)
     {
-      node->Walk(this);
+      e_node->Walk(this);
 
-      if (node->SEM_ResolvedType && node->SEM_ResolvedType->MultipleTypes.size() > 0)
+      if (e_node->SEM_ResolvedType && e_node->SEM_ResolvedType->MultipleTypes.size() > 0)
       {
         //If we have multiple types, push them separately
-        for (Type *t : node->SEM_ResolvedType->MultipleTypes)
+        for (Type *t : e_node->SEM_ResolvedType->MultipleTypes)
         {
           if (t && t->GetResolvedType() == GetBaseType("VariableArgument"))
             num_varargs += 1;
@@ -1833,11 +1838,11 @@ public:
       }
       else
       {
-        if (node->SEM_ResolvedType && node->SEM_ResolvedType->GetResolvedType() == GetBaseType("VariableArgument"))
+        if (e_node->SEM_ResolvedType && e_node->SEM_ResolvedType->GetResolvedType() == GetBaseType("VariableArgument"))
           num_varargs += 1;
 
-        expressionTypes.push_back(node->SEM_ResolvedType);
-        expressionData.push_back(node->SEM_Value);
+        expressionTypes.push_back(e_node->SEM_ResolvedType);
+        expressionData.push_back(e_node->SEM_Value);
       }
     }
 

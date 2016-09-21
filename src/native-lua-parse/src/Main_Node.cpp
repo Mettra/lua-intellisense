@@ -6,17 +6,13 @@
 #include "AutoComplete.h"
 #include "Minidump.h"
 
+#include <memory>
 #include <string>
 #include <fstream>
 #include <future>
 #include <thread>
 #include <chrono>
 #include <streambuf>
-
-namespace Windows
-{
-#include <DbgHelp.h>
-}
 
 #include "Main_Node.hpp"
 
@@ -82,12 +78,14 @@ namespace demo {
   Lexer::DfaState *lexer;
   Library *masterLibrary;
 
+#ifdef _WIN32
   Windows::LONG my_handler(Windows::EXCEPTION_POINTERS *ptr)
   {
     WriteDump(ptr);
 
     return EXCEPTION_CONTINUE_SEARCH;
   }
+#endif
 
   using namespace v8;
 
@@ -154,7 +152,6 @@ namespace demo {
 
   void WatchFunction_AutoComplete(const FunctionCallbackInfo<Value> &args)
   {
-    // fflush(stdout);
     internal_parse_stdout = "";
 
     Isolate* isolate = args.GetIsolate();
@@ -166,65 +163,49 @@ namespace demo {
     std::string uri(*uriValue);
     std::vector<AutoCompleteEntry> entries;
 
-    //std::condition_variable cv;
-    //std::mutex cv_m;
-    //
-    //std::thread thr([&]() {
+#ifdef _WIN32
     __try {
+#endif
         AutoComplete(uri, lineNumber, charNumber, entries);
-    //    cv.notify_all();
+
+#ifdef _WIN32
       }
       __except (my_handler((struct Windows::_EXCEPTION_POINTERS*)Windows::_exception_info())) {}
-    //});
+#endif
 
-    //std::unique_lock<std::mutex> lk(cv_m);
-    //auto status = cv.wait_for(lk, std::chrono::seconds(1));
+	  // We will be creating temporary handles so we use a handle scope.
+	  v8::HandleScope handle_scope(isolate);
 
-    //if (status == std::cv_status::timeout)
-    //{
-    //  my_handler(nullptr);
-    //  
-    //  Isolate* isolate = args.GetIsolate();
-    //  Local<Object> obj = Object::New(isolate);
-    //  obj->Set(String::NewFromUtf8(isolate, "output"), String::NewFromUtf8(isolate, "TIMEOUT!"));
-    //  args.GetReturnValue().Set(obj);
-    //}
-    //else
-    {
-      // We will be creating temporary handles so we use a handle scope.
-      v8::HandleScope handle_scope(isolate);
+	  // Create a new empty array.
+	  v8::Handle<v8::Array> array = v8::Array::New(isolate, entries.size());
+	  unsigned currentIndex = 0;
 
-      // Create a new empty array.
-      v8::Handle<v8::Array> array = v8::Array::New(isolate, entries.size());
-      unsigned currentIndex = 0;
+	  my_log("\n");
+	  my_log("Found Entries (%i):\n", entries.size());
+	  for (auto &&entry : entries)
+	  {
+		my_log("  %s\n", entry.name.c_str());
 
-      my_log("\n");
-      my_log("Found Entries (%i):\n", entries.size());
-      for (auto &&entry : entries)
-      {
-        my_log("  %s\n", entry.name.c_str());
+		Local<Object> js_entry = Object::New(isolate);
+		js_entry->Set(String::NewFromUtf8(isolate, "label"), String::NewFromUtf8(isolate, entry.name.c_str()));
+		js_entry->Set(String::NewFromUtf8(isolate, "data"), v8::Number::New(isolate, currentIndex));
+		js_entry->Set(String::NewFromUtf8(isolate, "kind"), v8::Uint32::New(isolate, (unsigned)entry.entryKind));
+		array->Set(currentIndex, js_entry);
+		currentIndex++;
+	  }
+	  //my_log("\n");
 
-        Local<Object> js_entry = Object::New(isolate);
-        js_entry->Set(String::NewFromUtf8(isolate, "label"), String::NewFromUtf8(isolate, entry.name.c_str()));
-        js_entry->Set(String::NewFromUtf8(isolate, "data"), v8::Number::New(isolate, currentIndex));
-        js_entry->Set(String::NewFromUtf8(isolate, "kind"), v8::Uint32::New(isolate, (unsigned)entry.entryKind));
-        array->Set(currentIndex, js_entry);
-        currentIndex++;
-      }
-      //my_log("\n");
+	  my_log("*******************************************\n\n");
 
-      my_log("*******************************************\n\n");
+	  Local<Object> obj = Object::New(isolate);
+	  obj->Set(String::NewFromUtf8(isolate, "completion_items"), array);
+	  obj->Set(String::NewFromUtf8(isolate, "output"), String::NewFromUtf8(isolate, internal_parse_stdout.c_str()));
+	  args.GetReturnValue().Set(obj);
 
-      Local<Object> obj = Object::New(isolate);
-      obj->Set(String::NewFromUtf8(isolate, "completion_items"), array);
-      obj->Set(String::NewFromUtf8(isolate, "output"), String::NewFromUtf8(isolate, internal_parse_stdout.c_str()));
-      args.GetReturnValue().Set(obj);
-    }
   }
 
   void WatchFunction_ParseDocument(const FunctionCallbackInfo<Value> &args)
   {
-    // fflush(stdout);
     internal_parse_stdout = "";
 
     String::Utf8Value uriValue(args[0]);
@@ -232,66 +213,25 @@ namespace demo {
     std::string uri(*uriValue);
     std::string text(*documentText);
 
-    //std::condition_variable cv;
-    //std::mutex cv_m;
-    //
-    //std::thread thr([&]() {
+#ifdef _WIN32
       __try {
+#endif
         ParseDocument(uri, text);
-    //    cv.notify_all();
+
+#ifdef _WIN32
       }
       __except (my_handler((struct Windows::_EXCEPTION_POINTERS*)Windows::_exception_info())) {}
-    //});
-
-    //std::unique_lock<std::mutex> lk(cv_m);
-    //auto status = cv.wait_for(lk, std::chrono::seconds(1));
-    //
-    //if(status == std::cv_status::timeout)
-    //{
-    //  my_handler(nullptr);
-    //  
-    //  Isolate* isolate = args.GetIsolate();
-    //  Local<Object> obj = Object::New(isolate);
-    //  obj->Set(String::NewFromUtf8(isolate, "output"), String::NewFromUtf8(isolate, "TIMEOUT!"));
-    //  args.GetReturnValue().Set(obj);
-    //}
+#endif
+ 
   }
 
   void init(Local<Object> exports) {
-    // fflush(stdout);
-    //setvbuf(stdout, my_stdout, _IOFBF, 8192);
-
     lexer = Lexer::CreateLanguageDfa();
     masterLibrary = CreateCoreLibrary();
 
-
+#ifdef _WIN32
     SetupMinidump();
-
-
-    //auto main_thread_id = Windows::GetCurrentThreadId();
-    //
-    //std::thread thr([&]() {
-    //  while (true)
-    //  {
-    //    std::this_thread::sleep_for(std::chrono::seconds(5));
-    //
-    //    // fflush(stdout);
-    //    FILE *f = fopen("minidump_periodic_output.txt", "wt");
-    //    fwrite(my_stdout, sizeof(char), sizeof(my_stdout), f);
-    //    fclose(f);
-    //
-    //    Windows::HANDLE file = Windows::CreateFile("minidump_periodic.dmp", GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    //
-    //    Windows::MINIDUMP_EXCEPTION_INFORMATION info;
-    //    info.ClientPointers = false;
-    //    info.ExceptionPointers = nullptr;
-    //    info.ThreadId = main_thread_id;
-    //
-    //    Windows::MiniDumpWriteDump(Windows::GetCurrentProcess(), Windows::GetCurrentProcessId(), file, Windows::MiniDumpWithFullMemory, &info, NULL, NULL);
-    //
-    //    Windows::CloseHandle(file);
-    //  }
-    //});
+#endif
 
     NODE_SET_METHOD(exports, "AutoComplete", WatchFunction_AutoComplete);
     NODE_SET_METHOD(exports, "ParseDocument", WatchFunction_ParseDocument);

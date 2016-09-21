@@ -3,7 +3,7 @@
 
 void my_log(const char* format, ...);
 
-const char* TokenNames[];
+extern const char* TokenNames[];
 
 struct DocumentPosition
 {

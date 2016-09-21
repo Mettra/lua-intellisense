@@ -33,15 +33,25 @@
               },
             }, # Release
           }, # configurations
+
+          'libraries':[
+          '-ldbghelp.lib'
+        ],
         }], # OS=="win"
+ 	     ['OS!="win"', {
+		      'cflags_cc!': [ '-fno-rtti' ],
+		      'cflags_cc+': [ '-std=c++14' ],
+        }],
+		    ['OS=="mac"', {
+          'xcode_settings': {
+            'GCC_ENABLE_CPP_RTTI': 'YES'
+		      }
+        }],
       ], # conditions
-      
       'include_dirs': [
         '../LuaParser/LuaParser/'
       ],
-      'libraries':[
-        '-ldbghelp.lib'
-      ]
+      
     },
     {
       "target_name": "action_after_build",

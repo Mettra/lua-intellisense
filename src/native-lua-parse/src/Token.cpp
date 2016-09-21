@@ -1,5 +1,6 @@
 #include "Token.h"
 #include <stdarg.h>
+#include <cstring>
 
 //Create names for all of the tokens
 const char* TokenNames[] =
@@ -42,7 +43,7 @@ std::string internal_parse_stdout;
 void my_log(const char* format, ...)
 {
   char buffer[1024];
-  memset(buffer, 0, sizeof(buffer));
+  std::memset(buffer, 0, sizeof(buffer));
 
   va_list argptr;
   va_start(argptr, format);

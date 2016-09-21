@@ -1,0 +1,20 @@
+{
+	"name": "lua-intellisense-server",
+	"description": "Implementation of lua-intellisense's server",
+	"version": "0.1.0",
+	"author": "Wesley Pesetti",
+	"license": "MIT",
+	"engines": {
+		"node": "*"
+	},
+	"dependencies": {
+		"vscode-languageserver": "^2.2.0"
+	},
+	"devDependencies": {
+		"typescript": "^1.8.9"
+	},
+	"scripts": {
+		"compile": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc -p .",
+		"watch": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc --watch -p ."
+	}
+}

@@ -1,36 +1,47 @@
 {
-	"name": "lua-intellisense",
-	"description": "VSCode extention to provide intellisense support for Lua.",
-	"author": "Wesley Pesetti",
-	"license": "MIT",
-	"version": "0.1.0",
-	"publisher": "mettra",
-	"engines": {
-		"vscode": "^1.4.0"
-	},
-	"categories": [
-		"Languages",
-		"Other"
-	],
-	"private": false,
-	"repository": "https://github.com/Mettra/lua-intellisense",
-	"bugs": "https://github.com/Mettra/lua-intellisense/issues",
-	"activationEvents": [
-		"*"
-	],
-	"main": "./out/src/extension",
-	"scripts": {
-		"vscode:prepublish": "node ./node_modules/vscode/bin/compile && scripts\\prepublish.bat",
-		"compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
-		"postinstall": "node ./node_modules/vscode/bin/install"
-
-	},
-	"devDependencies": {
-		"typescript": "^1.8.9",
-		"vscode": "^0.11.0"
-	},
-	"dependencies": {
-		"vscode-languageclient": "^2.4.2",
-		"node-gyp": "^3.3.1"
-	}
+    "name": "lua-intellisense",
+    "displayName": "Lua Intellisense",
+    "description": "Provides features to support the Lua language in Visual Studio Code.",
+    "author": "Wesley Pesetti",
+    "license": "MIT",
+    "version": "0.1.1",
+    "publisher": "mettra",
+    "galleryBanner": {
+        "color": "#252587",
+        "theme": "dark"
+    },
+    "engines": {
+        "vscode": "^1.4.0"
+    },
+    "categories": [
+        "Languages",
+        "Other"
+    ],
+    "private": false,
+    "bugs": {
+        "url": "https://github.com/Mettra/lua-intellisense/issues"
+    },
+    "homepage": "https://github.com/Mettra/lua-intellisense/blob/master/README.md",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Mettra/lua-intellisense.git"
+    },
+    "icon": "images/Lua_logo.svg",
+    "activationEvents": [
+        "*"
+    ],
+    "main": "./out/src/extension",
+    "scripts": {
+        "vscode:prepublish": "node ./node_modules/vscode/bin/compile",
+        "compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "devDependencies": {
+        "typescript": "^1.8.9",
+        "vscode": "^0.11.0"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^2.4.2",
+        "node-gyp": "^3.3.1"
+    }
 }

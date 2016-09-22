@@ -11,5 +11,5 @@ An extension to support the Lua language within visual studio code.
 
 ## TODO
 * Symbol definitions (Go to definition)
-* Custom type definitions (For lua inside of engines)
+* Custom type definitions (For lua inside of engines, as well as basic library autocompletion)
 * Better support for functions with multiple return values

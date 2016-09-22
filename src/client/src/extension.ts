@@ -18,6 +18,10 @@ namespace PushDocumentsRequest {
 	export const type: RequestType<void, void, any> = { get method() { return 'lua_intellisense/pushDocumentRequest'; } };
 }
 
+namespace ErrorNotSupportedRequest {
+	export const type: RequestType<void, void, any> = { get method() { return 'lua_intellisense/errorNotSupportedRequest'; } };
+}
+
 interface RecievedDocument
 {
     text : string;
@@ -66,7 +70,6 @@ export function activate(context: ExtensionContext) {
 	{
 		client.onRequest(PushDocumentsRequest.type, () => {
 			workspace.findFiles("**/*.lua", "").then((value: Uri[]) => {
-				console.log("It will have theese many" + value.length);
 				client.sendRequest(ParseDocuments.type,value.length).then();
 
 				value.forEach((uri : Uri) => {
@@ -80,7 +83,9 @@ export function activate(context: ExtensionContext) {
 			
 		});
 
-		
+		client.onRequest(ErrorNotSupportedRequest.type, () => {
+			vscode.window.showErrorMessage("Unfortunately, lua-intellisense does not support your operating system or cpu architecture.");
+		});
 
 		console.log("Registered!");
 		client.sendRequest(InitializeRequest.type, v).then();

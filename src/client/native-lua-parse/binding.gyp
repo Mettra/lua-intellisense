@@ -53,17 +53,6 @@
       ],
       
     },
-    {
-      "target_name": "action_after_build",
-      "type": "none",
-      "dependencies": [ "lua_parser" ],
-      "copies": [
-          {
-            "files": [ "<(PRODUCT_DIR)/lua_parser.node" ],
-            "destination": "../client/server/node_modules/lua_parser"
-          }
-      ]
-    }
   ]
 }
 #node-gyp configure rebuild --nodedir="c:\Sandbox\node_source" --debug --arch=ia32

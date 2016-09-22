@@ -5,11 +5,12 @@
 'use strict';
 
 let fs = require('fs');
-const lua_parser = require("lua_parser/lua_parser.node")
+let lua_parser : any = null;
+
 import {
     IPCMessageReader, IPCMessageWriter,
 	createConnection, IConnection,
-	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity, 
+	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
 	InitializeParams, InitializeResult,
 	TextDocumentPositionParams, CompletionItem, CompletionItemKind, CompletionOptions, RequestType
 } from 'vscode-languageserver';
@@ -20,6 +21,10 @@ namespace InitializeRequest {
 
 namespace PushDocumentsRequest {
 	export const type: RequestType<void, void, any> = { get method() { return 'lua_intellisense/pushDocumentRequest'; } };
+}
+
+namespace ErrorNotSupportedRequest {
+	export const type: RequestType<void, void, any> = { get method() { return 'lua_intellisense/errorNotSupportedRequest'; } };
 }
 
 interface RecievedDocument
@@ -57,8 +62,6 @@ documents.listen(connection);
 let workspaceRoot: string;
 connection.onInitialize((params): InitializeResult => {
 	workspaceRoot = params.rootPath;
-
-    print_con.console.log("Server initialized!");
     
 	return {
 		capabilities: {
@@ -77,7 +80,7 @@ connection.onInitialize((params): InitializeResult => {
 // This handler provides the initial list of the completion items.
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => 
 {
-    if(!parsedAllFiles)
+    if(lua_parser == null)
         return [];
     
     // The pass parameter contains the position of the text document in 
@@ -103,11 +106,26 @@ connection.onDidChangeConfiguration(() =>
 
 connection.onRequest(InitializeRequest.type, () =>
 {
+    let modulename = "lua_parser/lua_parser_" + process.platform + "_" + process.arch + ".node";
+    print_con.console.log("Searching for " + modulename);
+
+    try {
+        lua_parser = require(modulename)
+    } catch (e) {
+        print_con.console.log("Not supported!");
+        connection.sendRequest(ErrorNotSupportedRequest.type).then();
+        return;
+    }
+
+    print_con.console.log("Server initialized!");
     connection.sendRequest(PushDocumentsRequest.type).then();
 })
 
 connection.onRequest(ReceiveDocumentRequest.type, (doc : RecievedDocument) =>
 {
+    if(lua_parser == null)
+        return;
+
     newDocs.push(doc);
 
     if(newDocs.length == allFileNum)

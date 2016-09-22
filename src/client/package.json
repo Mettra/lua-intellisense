@@ -9,14 +9,18 @@
 		"vscode": "^1.4.0"
 	},
 	"categories": [
+		"Languages",
 		"Other"
 	],
+	"private": false,
+	"repository": "https://github.com/Mettra/lua-intellisense",
+	"bugs": "https://github.com/Mettra/lua-intellisense/issues",
 	"activationEvents": [
 		"*"
 	],
-	"main": "./out/src/extension",	
+	"main": "./out/src/extension",
 	"scripts": {
-		"vscode:prepublish": "node ./node_modules/vscode/bin/compile",
+		"vscode:prepublish": "node ./node_modules/vscode/bin/compile && scripts\\prepublish.bat",
 		"compile": "node ./node_modules/vscode/bin/compile -watch -p ./",
 		"postinstall": "node ./node_modules/vscode/bin/install"
 
@@ -26,6 +30,7 @@
 		"vscode": "^0.11.0"
 	},
 	"dependencies": {
-		"vscode-languageclient": "^2.4.2"
+		"vscode-languageclient": "^2.4.2",
+		"node-gyp": "^3.3.1"
 	}
 }
